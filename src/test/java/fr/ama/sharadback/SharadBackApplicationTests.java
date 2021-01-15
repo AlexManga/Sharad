@@ -1,6 +1,7 @@
 package fr.ama.sharadback;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +31,11 @@ class SharadBackApplicationTests {
 				.contentType(APPLICATION_JSON)
 				.content(noteStr))
 				.andExpect(status().is2xxSuccessful());
+	}
+
+	@Test
+	void success_on_get_request() throws Exception {
+		mockMvc.perform(get("/notes")).andExpect(status().is2xxSuccessful());
 	}
 
 }
