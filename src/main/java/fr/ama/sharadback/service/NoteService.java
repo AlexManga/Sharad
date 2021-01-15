@@ -1,0 +1,61 @@
+package fr.ama.sharadback.service;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.ama.sharadback.controller.FatalException;
+import fr.ama.sharadback.model.Note;
+import fr.ama.sharadback.model.NoteContent;
+import fr.ama.sharadback.model.NoteId;
+
+@Service
+public class NoteService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(NoteService.class);
+
+	private static final String LOCAL_STORAGE_ROOT = ".sharad/data";
+
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	public NoteService(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
+
+	public NoteId createNote(NoteContent noteContent) {
+		File storageDir = new File(LOCAL_STORAGE_ROOT);
+		if (!storageDir.exists()) {
+			storageDir.mkdirs();
+		}
+
+		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
+			throw new FatalException(String.format("unable to access storageDir %s", storageDir.getAbsolutePath()));
+		}
+
+		String fileId = generateNoteId();
+		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, fileId + ".txt"))) {
+			fos.write(objectMapper.writeValueAsBytes(new Note(fileId, noteContent.getContent())));
+			return new NoteId(fileId);
+		} catch (IOException e) {
+			throw new FatalException("Couldn't write note in file");
+		}
+	}
+
+	private String generateNoteId() {
+		return UUID.randomUUID().toString();
+	}
+}

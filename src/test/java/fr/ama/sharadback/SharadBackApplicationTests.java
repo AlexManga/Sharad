@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fr.ama.sharadback.model.Note;
+import fr.ama.sharadback.model.NoteContent;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,11 +22,12 @@ class SharadBackApplicationTests {
 	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
 	void success_on_post_note() throws Exception {
-		String noteStr = objectMapper.writeValueAsString(new Note(""));
+		String noteStr = objectMapper.writeValueAsString(new NoteContent(""));
 		mockMvc.perform(post("/note")
 				.contentType(APPLICATION_JSON)
 				.content(noteStr))
