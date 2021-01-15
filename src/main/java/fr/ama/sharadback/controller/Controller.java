@@ -1,6 +1,7 @@
 package fr.ama.sharadback.controller;
 
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,4 +15,9 @@ public class Controller {
 	public String postNote(@RequestBody Note note) {
 		return "";
     }
+
+	@GetMapping("/notes")
+	public String getNote() {
+		return "";
+	}
 }
