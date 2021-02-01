@@ -54,4 +54,27 @@ public class NoteService {
 	private String generateNoteId() {
 		return UUID.randomUUID().toString();
 	}
+
+	public List<Note> getAllNotes() {
+		File storageDir = new File(LOCAL_STORAGE_ROOT);
+		if (!storageDir.exists()) {
+			return List.of();
+		}
+
+		return stream(storageDir.listFiles(file -> file.isFile()))
+				.map(this::retrieveNoteFromFile)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(toList());
+	}
+
+	private Optional<Note> retrieveNoteFromFile(File file) {
+		try {
+			Note note = objectMapper.readValue(file, Note.class);
+			return Optional.of(note);
+		} catch (IOException e) {
+			LOGGER.warn(String.format("unable to read file %s", file.getAbsolutePath()), e);
+			return Optional.empty();
+		}
+	}
 }
