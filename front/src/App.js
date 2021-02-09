@@ -1,42 +1,55 @@
+// /!\ l'ordre d'import est important. Importer bootstrap en dernier fait que bootstrap override tous les autres css
+import 'bootstrap/dist/css/bootstrap.min.css'
 import React, {Component} from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 
 class App extends Component {
 
-    state = {};
+    state = { inputTextBoxDisplayed: false };
+    noteInputRef;
 
-    componentDidMount() {
-        setInterval(this.hello, 250);
+    constructor() {
+        super();
+        this.noteInputRef = React.createRef();
     }
 
-    hello = () => {
-        fetch('/api/hello')
-            .then(response => response.text())
-            .then(message => {
-                this.setState({message: message});
-            });
-    };
+    displayTextBoxInput = () => {
+        this.setState({ inputTextBoxDisplayed: true });
+    }
+
+    postNote = () => {
+        const val = this.noteInputRef.current.value;
+        const request = {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            // body: JSON.stringify({ content: `${val}` })
+        }
+        fetch('/note', request)
+        .then(res => res.json())
+        .then((data) => {
+            console.log(data);
+        })
+        .catch(console.log)
+    }
 
     render() {
         return (
-            <div className="App">
-                <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo"/>
-                    <p>
-                        {this.state.message}
-                    </p>
-                    <a
-                        className="App-link"
-                        href="https://reactjs.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Learn React
-                    </a>
-                </header>
-            </div>
+            <main className="App">
+                <div className="container">
+                    <div className="px-5">
+                        <button className="btn btn-outline-primary" onClick={ this.displayTextBoxInput } hidden={ this.state.inputTextBoxDisplayed } >+</button>
+                        <div className="form-group mb-0" hidden={ !this.state.inputTextBoxDisplayed }>
+                            <textarea id="note-input" className="form-control" ref={ this.noteInputRef }></textarea>
+                            <div className="row mx-0">
+                                <button className="btn btn-outline-primary offset-10 col-2" onClick={ this.postNote }>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         );
     }
 }
