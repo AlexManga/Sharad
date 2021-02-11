@@ -3,6 +3,7 @@ package fr.ama.sharadback;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,6 +43,11 @@ class SharadBackApplicationTests {
 	@Test
 	void success_on_get_request() throws Exception {
 		mockMvc.perform(get("/note")).andExpect(status().is2xxSuccessful());
+	}
+
+	@Test
+	void success_on_delete_request() throws Exception {
+		mockMvc.perform(delete("/note/arbitraryNoteId")).andExpect(status().is2xxSuccessful());
 	}
 
 	@Test
