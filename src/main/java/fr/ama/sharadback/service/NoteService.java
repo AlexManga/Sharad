@@ -6,6 +6,8 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,17 +48,13 @@ public class NoteService {
 			throw new FatalException(String.format("unable to access storageDir %s", storageDir.getAbsolutePath()));
 		}
 
-		String fileId = generateNoteId();
-		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, fileId + ".txt"))) {
-			fos.write(objectMapper.writeValueAsBytes(new Note(fileId, noteContent.getContent())));
-			return new NoteId(fileId);
+		String noteId = generateNoteId();
+		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, buildNoteFilename(noteId)))) {
+			fos.write(objectMapper.writeValueAsBytes(new Note(noteId, noteContent.getContent())));
+			return new NoteId(noteId);
 		} catch (IOException e) {
 			throw new FatalException("Couldn't write note in file");
 		}
-	}
-
-	private String generateNoteId() {
-		return UUID.randomUUID().toString();
 	}
 
 	public List<Note> getAllNotes() {
@@ -72,6 +70,22 @@ public class NoteService {
 				.collect(toList());
 	}
 
+	public Optional<StorageError> deleteNote(String noteId) {
+		String fileName = buildNoteFilename(noteId);
+		File fileToDelete = new File(localStorageConfiguration.getRootPath(), fileName);
+		if (!fileToDelete.exists()) {
+			return Optional.of(StorageError.fileDoesNotExist(noteId));
+		}
+
+		try {
+			Files.delete(Paths.get(fileToDelete.getAbsolutePath()));
+			return Optional.empty();
+		} catch (IOException e) {
+			return Optional.of(StorageError.genericFatalError(e));
+		}
+
+	}
+
 	private Optional<Note> retrieveNoteFromFile(File file) {
 		try {
 			Note note = objectMapper.readValue(file, Note.class);
@@ -80,5 +94,13 @@ public class NoteService {
 			LOGGER.warn(String.format("unable to read file %s", file.getAbsolutePath()), e);
 			return Optional.empty();
 		}
+	}
+
+	private String buildNoteFilename(String fileId) {
+		return fileId + ".txt";
+	}
+
+	private String generateNoteId() {
+		return UUID.randomUUID().toString();
 	}
 }

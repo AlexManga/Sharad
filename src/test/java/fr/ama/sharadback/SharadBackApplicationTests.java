@@ -89,8 +89,8 @@ class SharadBackApplicationTests {
 	}
 
 	@Test
-	void success_on_delete_request() throws Exception {
-		mockMvc.perform(delete("/note/arbitraryNoteId")).andExpect(status().is2xxSuccessful());
+	void deleting_a_non_existing_note_should_give_back_404() throws Exception {
+		mockMvc.perform(delete("/note/arbitraryNoteId")).andExpect(status().isNotFound());
 	}
 
 	@Test
