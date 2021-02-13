@@ -7,6 +7,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -67,11 +69,6 @@ class SharadBackApplicationTests {
 	}
 
 	@Test
-	void success_on_delete_request() throws Exception {
-		mockMvc.perform(delete("/note/arbitraryNoteId")).andExpect(status().is2xxSuccessful());
-	}
-
-	@Test
 	void posting_then_getting_should_give_back_the_note() throws Exception {
 		String arbitraryNoteContent = "test content of note";
 
@@ -91,4 +88,35 @@ class SharadBackApplicationTests {
 										contains(arbitraryNoteContent))));
 	}
 
+	@Test
+	void success_on_delete_request() throws Exception {
+		mockMvc.perform(delete("/note/arbitraryNoteId")).andExpect(status().is2xxSuccessful());
+	}
+
+	@Test
+	void posting_then_deleting_should_give_back_no_note() throws Exception {
+		String arbitraryNoteContent = "test content of note to be deleted";
+
+		String postResponseBody = mockMvc.perform(post("/note").contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new NoteContent(arbitraryNoteContent))))
+				.andExpect(status().is2xxSuccessful())
+				.andReturn()
+				.getResponse().getContentAsString();
+
+		NoteId noteId = objectMapper.readValue(postResponseBody, NoteId.class);
+
+		mockMvc.perform(get("/note"))
+				.andExpect(status().is2xxSuccessful())
+				.andExpect(
+						jsonPath(String.format("$.[?(@.id=='%s')].content", noteId.getId()),
+								allOf(Matchers.<String>iterableWithSize(1),
+										contains(arbitraryNoteContent))));
+
+		mockMvc.perform(MockMvcRequestBuilders.delete("/note/" + noteId.getId()))
+				.andExpect(status().is2xxSuccessful());
+
+		mockMvc.perform(get("/note"))
+				.andExpect(status().is2xxSuccessful())
+				.andExpect(content().string("[]"));
+	}
 }
