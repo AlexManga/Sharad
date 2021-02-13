@@ -1,5 +1,6 @@
 package fr.ama.sharadback;
 
+import static org.assertj.core.util.Files.delete;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -9,27 +10,47 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.File;
+
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ama.sharadback.model.NoteContent;
 import fr.ama.sharadback.model.NoteId;
+import fr.ama.sharadback.service.LocalStorageConfiguration;
 
 @SpringBootTest
+@TestPropertySource(locations = "classpath:application-test.properties")
 @AutoConfigureMockMvc
 class SharadBackApplicationTests {
 
-	@Autowired
 	private MockMvc mockMvc;
+	private ObjectMapper objectMapper = new ObjectMapper();
+	private LocalStorageConfiguration localStorageConfiguration;
 
 	@Autowired
-	private ObjectMapper objectMapper = new ObjectMapper();
+	public SharadBackApplicationTests(MockMvc mockMvc, ObjectMapper objectMapper,
+			LocalStorageConfiguration localStorageConfiguration) {
+		this.mockMvc = mockMvc;
+		this.objectMapper = objectMapper;
+		this.localStorageConfiguration = localStorageConfiguration;
+	}
+
+	@BeforeEach
+	void before() {
+		File file = new File(localStorageConfiguration.getRootPath());
+		if (file.exists()) {
+			delete(file);
+		}
+	}
 
 	@Test
 	void success_on_post_note() throws Exception {

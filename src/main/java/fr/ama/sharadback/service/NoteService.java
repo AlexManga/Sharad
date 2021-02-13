@@ -27,17 +27,17 @@ public class NoteService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NoteService.class);
 
-	private static final String LOCAL_STORAGE_ROOT = ".sharad/data";
-
+	private LocalStorageConfiguration localStorageConfiguration;
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	public NoteService(ObjectMapper objectMapper) {
+	public NoteService(LocalStorageConfiguration localStorageConfiguration, ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
+		this.localStorageConfiguration = localStorageConfiguration;
 	}
 
 	public NoteId createNote(NoteContent noteContent) {
-		File storageDir = new File(LOCAL_STORAGE_ROOT);
+		File storageDir = new File(localStorageConfiguration.getRootPath());
 		if (!storageDir.exists()) {
 			storageDir.mkdirs();
 		}
@@ -60,7 +60,7 @@ public class NoteService {
 	}
 
 	public List<Note> getAllNotes() {
-		File storageDir = new File(LOCAL_STORAGE_ROOT);
+		File storageDir = new File(localStorageConfiguration.getRootPath());
 		if (!storageDir.exists()) {
 			return List.of();
 		}
