@@ -1,19 +1,16 @@
 package fr.ama.sharadback;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Files.delete;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.ama.sharadback.model.Note;
 import fr.ama.sharadback.model.NoteContent;
 import fr.ama.sharadback.model.NoteId;
 import fr.ama.sharadback.service.LocalStorageConfiguration;
@@ -77,15 +75,17 @@ class SharadBackApplicationTests {
 				.andExpect(status().is2xxSuccessful())
 				.andReturn()
 				.getResponse().getContentAsString();
-
 		NoteId noteId = objectMapper.readValue(postResponseBody, NoteId.class);
 
-		mockMvc.perform(get("/note"))
+		String getResponseBody = mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())
-				.andExpect(
-						jsonPath(String.format("$.[?(@.id=='%s')].content", noteId.getId()),
-								allOf(Matchers.<String>iterableWithSize(1),
-										contains(arbitraryNoteContent))));
+				.andReturn().getResponse().getContentAsString();
+		Note[] retrievedNotes = objectMapper.readerFor(Note[].class).readValue(getResponseBody);
+
+		assertThat(retrievedNotes).hasSize(1);
+		assertThat(retrievedNotes[0])
+				.usingRecursiveComparison()
+				.isEqualTo(new Note(noteId, arbitraryNoteContent));
 	}
 
 	@Test
@@ -105,12 +105,15 @@ class SharadBackApplicationTests {
 
 		NoteId noteId = objectMapper.readValue(postResponseBody, NoteId.class);
 
-		mockMvc.perform(get("/note"))
+		String getResponseBody = mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())
-				.andExpect(
-						jsonPath(String.format("$.[?(@.id=='%s')].content", noteId.getId()),
-								allOf(Matchers.<String>iterableWithSize(1),
-										contains(arbitraryNoteContent))));
+				.andReturn().getResponse().getContentAsString();
+
+		Note[] retrievedNotes = objectMapper.readerFor(Note[].class).readValue(getResponseBody);
+		assertThat(retrievedNotes).hasSize(1);
+		assertThat(retrievedNotes[0])
+				.usingRecursiveComparison()
+				.isEqualTo(new Note(noteId, arbitraryNoteContent));
 
 		mockMvc.perform(MockMvcRequestBuilders.delete("/note/" + noteId.getId()))
 				.andExpect(status().is2xxSuccessful());

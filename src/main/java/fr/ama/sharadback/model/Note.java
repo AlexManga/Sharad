@@ -3,17 +3,17 @@ package fr.ama.sharadback.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class Note {
-	private String id;
+	private NoteId noteId;
 	private String content;
 
 	@JsonCreator
-	public Note(String id, String content) {
-		this.id = id;
+	public Note(NoteId id, String content) {
+		this.noteId = id;
 		this.content = content;
 	}
 
-	public String getId() {
-		return id;
+	public NoteId getNoteId() {
+		return noteId;
 	}
 
 	public String getContent() {

@@ -6,8 +6,11 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,11 +53,18 @@ public class NoteService {
 
 		String noteId = generateNoteId();
 		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, buildNoteFilename(noteId)))) {
-			fos.write(objectMapper.writeValueAsBytes(new Note(noteId, noteContent.getContent())));
-			return new NoteId(noteId);
-		} catch (IOException e) {
-			throw new FatalException("Couldn't write note in file");
+			String noteVersion = computeVersion(noteContent.getContent());
+			fos.write(objectMapper
+					.writeValueAsBytes(new Note(new NoteId(noteId, noteVersion), noteContent.getContent())));
+			return new NoteId(noteId, noteVersion);
+		} catch (Exception e) {
+			throw new FatalException("Unknown error happened", e);
 		}
+	}
+
+	private String computeVersion(String content) throws NoSuchAlgorithmException {
+		Charset utf8 = Charset.forName("UTF-8");
+		return new String(MessageDigest.getInstance("SHA-256").digest(content.getBytes(utf8)), utf8);
 	}
 
 	public List<Note> getAllNotes() {
