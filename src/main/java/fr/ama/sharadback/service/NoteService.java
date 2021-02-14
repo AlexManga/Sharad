@@ -1,5 +1,8 @@
 package fr.ama.sharadback.service;
 
+import static fr.ama.sharadback.service.StorageError.genericFatalError;
+import static fr.ama.sharadback.utils.Result.error;
+import static fr.ama.sharadback.utils.Result.success;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -26,6 +29,7 @@ import fr.ama.sharadback.controller.FatalException;
 import fr.ama.sharadback.model.Note;
 import fr.ama.sharadback.model.NoteContent;
 import fr.ama.sharadback.model.NoteId;
+import fr.ama.sharadback.utils.Result;
 
 @Service
 public class NoteService {
@@ -112,5 +116,32 @@ public class NoteService {
 
 	private String generateNoteId() {
 		return UUID.randomUUID().toString();
+	}
+
+	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, String newContent) {
+		File storageDir = new File(localStorageConfiguration.getRootPath());
+		if (!storageDir.exists()) {
+			storageDir.mkdirs();
+		}
+
+		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
+			return error(StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath()));
+		}
+
+		String noteFileName = buildNoteFilename(previousNoteId.getId());
+		File noteFileToModify = new File(storageDir, noteFileName);
+		if (!noteFileToModify.exists()) {
+			return error(StorageError.fileDoesNotExist(noteFileToModify.getPath()));
+		}
+
+		try (FileOutputStream fos = new FileOutputStream(
+				new File(storageDir, noteFileName))) {
+			String noteVersion = computeVersion(newContent);
+			fos.write(objectMapper
+					.writeValueAsBytes(new Note(new NoteId(previousNoteId.getId(), noteVersion), newContent)));
+			return success(new NoteId(previousNoteId.getId(), noteVersion));
+		} catch (Exception e) {
+			return error(genericFatalError(e));
+		}
 	}
 }
