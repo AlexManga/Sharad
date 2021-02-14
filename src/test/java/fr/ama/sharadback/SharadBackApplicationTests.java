@@ -6,6 +6,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.ama.sharadback.model.Note;
 import fr.ama.sharadback.model.NoteContent;
 import fr.ama.sharadback.model.NoteId;
+import fr.ama.sharadback.model.UpdateNote;
 import fr.ama.sharadback.service.LocalStorageConfiguration;
 
 @SpringBootTest
@@ -121,5 +123,54 @@ class SharadBackApplicationTests {
 		mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())
 				.andExpect(content().string("[]"));
+	}
+
+	@Test
+	void putting_a_non_existing_note_should_give_back_404() throws Exception {
+		String arbitraryNoteContent = "modified test content of note";
+
+		mockMvc.perform(put("/note").contentType(APPLICATION_JSON)
+				.content(objectMapper
+						.writeValueAsString(new UpdateNote(new NoteId("arbitraryNoteId", ""), arbitraryNoteContent))))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void putting_an_existing_note_should_give_back_the_modified_note() throws Exception {
+		String arbitraryInitialNoteContent = "test content of note to be modified";
+		String arbitraryModifiedNoteContent = "MODIFIED test content of note";
+
+		String postResponseBody = mockMvc.perform(post("/note").contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new NoteContent(arbitraryInitialNoteContent))))
+				.andExpect(status().is2xxSuccessful())
+				.andReturn()
+				.getResponse().getContentAsString();
+
+		NoteId initialNoteId = objectMapper.readValue(postResponseBody, NoteId.class);
+
+		String getResponseBeforeModificationBody = mockMvc.perform(get("/note"))
+				.andExpect(status().is2xxSuccessful())
+				.andReturn().getResponse().getContentAsString();
+
+		Note[] firstRetrievedNotes = objectMapper.readerFor(Note[].class).readValue(getResponseBeforeModificationBody);
+		assertThat(firstRetrievedNotes).hasSize(1);
+		assertThat(firstRetrievedNotes[0])
+				.usingRecursiveComparison()
+				.isEqualTo(new Note(initialNoteId, arbitraryInitialNoteContent));
+
+		mockMvc.perform(put(String.format("/note", initialNoteId.getId())).contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(
+						new UpdateNote(firstRetrievedNotes[0].getNoteId(), arbitraryModifiedNoteContent))))
+				.andExpect(status().is2xxSuccessful());
+
+		String getResponseAfterModificationBody = mockMvc.perform(get("/note"))
+				.andExpect(status().is2xxSuccessful())
+				.andReturn().getResponse().getContentAsString();
+
+		Note[] secondRetrievedNotes = objectMapper.readerFor(Note[].class).readValue(getResponseAfterModificationBody);
+		assertThat(secondRetrievedNotes).hasSize(1);
+		assertThat(secondRetrievedNotes[0].getNoteId().getId()).isEqualTo(initialNoteId.getId());
+		assertThat(secondRetrievedNotes[0].getContent()).isEqualTo(arbitraryModifiedNoteContent);
+		assertThat(secondRetrievedNotes[0].getNoteId().getVersion()).isNotEqualTo(initialNoteId.getVersion());
 	}
 }
