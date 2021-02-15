@@ -66,17 +66,12 @@ public class NoteService {
 		}
 	}
 
-	private String computeVersion(String content) throws NoSuchAlgorithmException {
-		Charset utf8 = Charset.forName("UTF-8");
-		return new String(MessageDigest.getInstance("SHA-256").digest(content.getBytes(utf8)), utf8);
-	}
-
 	public List<Note> getAllNotes() {
 		File storageDir = new File(localStorageConfiguration.getRootPath());
 		if (!storageDir.exists()) {
 			return List.of();
 		}
-
+	
 		return stream(storageDir.listFiles(file -> file.isFile()))
 				.map(this::retrieveNoteFromFile)
 				.filter(Optional::isPresent)
@@ -90,14 +85,46 @@ public class NoteService {
 		if (!fileToDelete.exists()) {
 			return Optional.of(StorageError.fileDoesNotExist(noteId));
 		}
-
+	
 		try {
 			Files.delete(Paths.get(fileToDelete.getAbsolutePath()));
 			return Optional.empty();
 		} catch (IOException e) {
 			return Optional.of(StorageError.genericFatalError(e));
 		}
+	
+	}
 
+	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, String newContent) {
+		File storageDir = new File(localStorageConfiguration.getRootPath());
+		if (!storageDir.exists()) {
+			storageDir.mkdirs();
+		}
+	
+		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
+			return error(StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath()));
+		}
+	
+		String noteFileName = buildNoteFilename(previousNoteId.getId());
+		File noteFileToModify = new File(storageDir, noteFileName);
+		if (!noteFileToModify.exists()) {
+			return error(StorageError.fileDoesNotExist(noteFileToModify.getPath()));
+		}
+	
+		try (FileOutputStream fos = new FileOutputStream(
+				new File(storageDir, noteFileName))) {
+			String noteVersion = computeVersion(newContent);
+			fos.write(objectMapper
+					.writeValueAsBytes(new Note(new NoteId(previousNoteId.getId(), noteVersion), newContent)));
+			return success(new NoteId(previousNoteId.getId(), noteVersion));
+		} catch (Exception e) {
+			return error(genericFatalError(e));
+		}
+	}
+
+	private String computeVersion(String content) throws NoSuchAlgorithmException {
+		Charset utf8 = Charset.forName("UTF-8");
+		return new String(MessageDigest.getInstance("SHA-256").digest(content.getBytes(utf8)), utf8);
 	}
 
 	private Optional<Note> retrieveNoteFromFile(File file) {
@@ -116,32 +143,5 @@ public class NoteService {
 
 	private String generateNoteId() {
 		return UUID.randomUUID().toString();
-	}
-
-	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, String newContent) {
-		File storageDir = new File(localStorageConfiguration.getRootPath());
-		if (!storageDir.exists()) {
-			storageDir.mkdirs();
-		}
-
-		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
-			return error(StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath()));
-		}
-
-		String noteFileName = buildNoteFilename(previousNoteId.getId());
-		File noteFileToModify = new File(storageDir, noteFileName);
-		if (!noteFileToModify.exists()) {
-			return error(StorageError.fileDoesNotExist(noteFileToModify.getPath()));
-		}
-
-		try (FileOutputStream fos = new FileOutputStream(
-				new File(storageDir, noteFileName))) {
-			String noteVersion = computeVersion(newContent);
-			fos.write(objectMapper
-					.writeValueAsBytes(new Note(new NoteId(previousNoteId.getId(), noteVersion), newContent)));
-			return success(new NoteId(previousNoteId.getId(), noteVersion));
-		} catch (Exception e) {
-			return error(genericFatalError(e));
-		}
 	}
 }
