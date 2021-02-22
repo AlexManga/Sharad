@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 import fr.ama.sharadback.SharadBackApplication;
 import fr.ama.sharadback.model.Note;
@@ -21,7 +21,7 @@ import fr.ama.sharadback.model.NoteContent;
 import fr.ama.sharadback.model.NoteId;
 
 @SpringBootTest(classes = { SharadBackApplication.class })
-@TestPropertySource(locations = "classpath:application-test.properties")
+@ActiveProfiles("test")
 public class NoteServiceIntegrationTest {
 
 	private LocalStorageConfiguration localStorageConfiguration;
