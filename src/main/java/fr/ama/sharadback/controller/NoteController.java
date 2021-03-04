@@ -28,7 +28,7 @@ import fr.ama.sharadback.service.StorageError;
 
 @RestController
 @RequestMapping("/note")
-public class Controller {
+public class NoteController {
 
 	@Autowired
 	private NoteService noteService;
@@ -46,7 +46,7 @@ public class Controller {
 	@DeleteMapping(path = "/{id}")
 	public ResponseEntity<Object> deleteNote(@PathVariable("id") String noteId) {
 		return noteService.deleteNote(noteId)
-				.map(Controller::handleStorageError)
+				.map(NoteController::handleStorageError)
 				.orElse(ok().build());
 	}
 
@@ -54,7 +54,7 @@ public class Controller {
 	public ResponseEntity<NoteId> putNote(@RequestBody UpdateNote updateNote) {
 		return noteService.modifyNote(updateNote.getPreviousNoteId(), updateNote.getNewContent())
 				.map(noteId -> ok().body(noteId))
-				.onError(Controller::handleStorageError);
+				.onError(NoteController::handleStorageError);
 	}
 
 	private static <T> ResponseEntity<T> handleStorageError(StorageError error) {

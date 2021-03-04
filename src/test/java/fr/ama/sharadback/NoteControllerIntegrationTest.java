@@ -32,14 +32,14 @@ import fr.ama.sharadback.service.LocalStorageConfiguration;
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class SharadBackApplicationTests {
+class NoteControllerIntegrationTest {
 
 	private MockMvc mockMvc;
 	private ObjectMapper objectMapper = new ObjectMapper();
 	private LocalStorageConfiguration localStorageConfiguration;
 
 	@Autowired
-	public SharadBackApplicationTests(MockMvc mockMvc, ObjectMapper objectMapper,
+	public NoteControllerIntegrationTest(MockMvc mockMvc, ObjectMapper objectMapper,
 			LocalStorageConfiguration localStorageConfiguration) {
 		this.mockMvc = mockMvc;
 		this.objectMapper = objectMapper;
