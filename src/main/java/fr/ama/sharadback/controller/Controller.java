@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.ama.sharadback.model.Note;
-import fr.ama.sharadback.model.NoteContent;
-import fr.ama.sharadback.model.NoteId;
-import fr.ama.sharadback.model.UpdateNote;
+import fr.ama.sharadback.model.note.Note;
+import fr.ama.sharadback.model.note.NoteContent;
+import fr.ama.sharadback.model.note.NoteId;
+import fr.ama.sharadback.model.note.UpdateNote;
 import fr.ama.sharadback.service.NoteService;
 import fr.ama.sharadback.service.StorageError;
 

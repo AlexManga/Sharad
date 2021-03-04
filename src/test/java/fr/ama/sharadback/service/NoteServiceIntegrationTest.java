@@ -17,9 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import fr.ama.sharadback.SharadBackApplication;
-import fr.ama.sharadback.model.Note;
-import fr.ama.sharadback.model.NoteContent;
-import fr.ama.sharadback.model.NoteId;
+import fr.ama.sharadback.model.note.Note;
+import fr.ama.sharadback.model.note.NoteContent;
+import fr.ama.sharadback.model.note.NoteId;
 import fr.ama.sharadback.utils.StreamUtils;
 
 @SpringBootTest(classes = { SharadBackApplication.class })

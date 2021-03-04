@@ -1,4 +1,4 @@
-package fr.ama.sharadback.model;
+package fr.ama.sharadback.model.note;
 
 public class UpdateNote {
 

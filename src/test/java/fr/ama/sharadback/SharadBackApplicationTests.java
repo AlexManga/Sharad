@@ -23,10 +23,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fr.ama.sharadback.model.Note;
-import fr.ama.sharadback.model.NoteContent;
-import fr.ama.sharadback.model.NoteId;
-import fr.ama.sharadback.model.UpdateNote;
+import fr.ama.sharadback.model.note.Note;
+import fr.ama.sharadback.model.note.NoteContent;
+import fr.ama.sharadback.model.note.NoteId;
+import fr.ama.sharadback.model.note.UpdateNote;
 import fr.ama.sharadback.service.LocalStorageConfiguration;
 
 @SpringBootTest
