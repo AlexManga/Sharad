@@ -56,7 +56,7 @@ class SharadBackApplicationTests {
 
 	@Test
 	void success_on_post_note() throws Exception {
-		String noteStr = objectMapper.writeValueAsString(new NoteContent(""));
+		String noteStr = objectMapper.writeValueAsString(new NoteContent(null, ""));
 		mockMvc.perform(post("/note")
 				.contentType(APPLICATION_JSON)
 				.content(noteStr))
@@ -70,10 +70,10 @@ class SharadBackApplicationTests {
 
 	@Test
 	void posting_then_getting_should_give_back_the_note() throws Exception {
-		String arbitraryNoteContent = "test content of note";
+		NoteContent arbitraryNoteContent = new NoteContent("arbitrary title", "test content of note");
 
 		String postResponseBody = mockMvc.perform(post("/note").contentType(APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(new NoteContent(arbitraryNoteContent))))
+				.content(objectMapper.writeValueAsString(arbitraryNoteContent)))
 				.andExpect(status().is2xxSuccessful())
 				.andReturn()
 				.getResponse().getContentAsString();
@@ -97,10 +97,10 @@ class SharadBackApplicationTests {
 
 	@Test
 	void posting_then_deleting_should_give_back_no_note() throws Exception {
-		String arbitraryNoteContent = "test content of note to be deleted";
+		NoteContent arbitraryNoteContent = new NoteContent("arbitrary title", "test content of note to be deleted");
 
 		String postResponseBody = mockMvc.perform(post("/note").contentType(APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(new NoteContent(arbitraryNoteContent))))
+				.content(objectMapper.writeValueAsString(arbitraryNoteContent)))
 				.andExpect(status().is2xxSuccessful())
 				.andReturn()
 				.getResponse().getContentAsString();
@@ -127,7 +127,7 @@ class SharadBackApplicationTests {
 
 	@Test
 	void putting_a_non_existing_note_should_give_back_404() throws Exception {
-		String arbitraryNoteContent = "modified test content of note";
+		NoteContent arbitraryNoteContent = new NoteContent(null, "modified test content of note");
 
 		mockMvc.perform(put("/note").contentType(APPLICATION_JSON)
 				.content(objectMapper
@@ -137,11 +137,13 @@ class SharadBackApplicationTests {
 
 	@Test
 	void putting_an_existing_note_should_give_back_the_modified_note() throws Exception {
-		String arbitraryInitialNoteContent = "test content of note to be modified";
-		String arbitraryModifiedNoteContent = "MODIFIED test content of note";
+		NoteContent arbitraryInitialNoteContent = new NoteContent("arbitrary title",
+				"test content of note to be modified");
+		NoteContent arbitraryModifiedNoteContent = new NoteContent("modified arbitrary title",
+				"MODIFIED test content of note");
 
 		String postResponseBody = mockMvc.perform(post("/note").contentType(APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(new NoteContent(arbitraryInitialNoteContent))))
+				.content(objectMapper.writeValueAsString(arbitraryInitialNoteContent)))
 				.andExpect(status().is2xxSuccessful())
 				.andReturn()
 				.getResponse().getContentAsString();
@@ -170,7 +172,9 @@ class SharadBackApplicationTests {
 		Note[] secondRetrievedNotes = objectMapper.readerFor(Note[].class).readValue(getResponseAfterModificationBody);
 		assertThat(secondRetrievedNotes).hasSize(1);
 		assertThat(secondRetrievedNotes[0].getNoteId().getId()).isEqualTo(initialNoteId.getId());
-		assertThat(secondRetrievedNotes[0].getContent()).isEqualTo(arbitraryModifiedNoteContent);
+		assertThat(secondRetrievedNotes[0].getContent())
+				.usingRecursiveComparison()
+				.isEqualTo(arbitraryModifiedNoteContent);
 		assertThat(secondRetrievedNotes[0].getNoteId().getVersion()).isNotEqualTo(initialNoteId.getVersion());
 	}
 }

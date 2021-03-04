@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class Note {
 	private NoteId noteId;
-	private String content;
+	private NoteContent content;
 
 	@JsonCreator
-	public Note(NoteId id, String content) {
+	public Note(NoteId id, NoteContent content) {
 		this.noteId = id;
 		this.content = content;
 	}
@@ -16,7 +16,7 @@ public class Note {
 		return noteId;
 	}
 
-	public String getContent() {
+	public NoteContent getContent() {
 		return content;
 	}
 }

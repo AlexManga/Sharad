@@ -57,9 +57,9 @@ public class NoteService {
 
 		String noteId = generateNoteId();
 		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, buildNoteFilename(noteId)))) {
-			String noteVersion = computeVersion(noteContent.getContent());
+			String noteVersion = computeVersion(noteContent);
 			fos.write(objectMapper
-					.writeValueAsBytes(new Note(new NoteId(noteId, noteVersion), noteContent.getContent())));
+					.writeValueAsBytes(new Note(new NoteId(noteId, noteVersion), noteContent)));
 			return new NoteId(noteId, noteVersion);
 		} catch (Exception e) {
 			throw new FatalException("Unknown error happened", e);
@@ -95,7 +95,7 @@ public class NoteService {
 
 	}
 
-	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, String newContent) {
+	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, NoteContent newContent) {
 		File storageDir = new File(localStorageConfiguration.getRootPath());
 		if (!storageDir.exists()) {
 			storageDir.mkdirs();
@@ -122,8 +122,8 @@ public class NoteService {
 		}
 	}
 
-	private String computeVersion(String content) throws NoSuchAlgorithmException {
-		return new String(MessageDigest.getInstance("SHA-256").digest(content.getBytes(UTF_8)), UTF_8);
+	private String computeVersion(NoteContent content) throws NoSuchAlgorithmException {
+		return new String(MessageDigest.getInstance("SHA-256").digest(content.getBody().getBytes(UTF_8)), UTF_8);
 	}
 
 	private Optional<Note> retrieveNoteFromFile(File file) {

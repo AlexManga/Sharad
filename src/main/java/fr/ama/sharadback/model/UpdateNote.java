@@ -3,9 +3,9 @@ package fr.ama.sharadback.model;
 public class UpdateNote {
 
 	private NoteId previousNoteId;
-	private String newContent;
+	private NoteContent newContent;
 
-	public UpdateNote(NoteId previousNoteId, String newContent) {
+	public UpdateNote(NoteId previousNoteId, NoteContent newContent) {
 		this.previousNoteId = previousNoteId;
 		this.newContent = newContent;
 	}
@@ -14,7 +14,7 @@ public class UpdateNote {
 		return previousNoteId;
 	}
 
-	public String getNewContent() {
+	public NoteContent getNewContent() {
 		return newContent;
 	}
 

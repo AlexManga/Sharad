@@ -3,14 +3,20 @@ package fr.ama.sharadback.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class NoteContent {
-	private String content;
+	private String title;
+	private String body;
 
 	@JsonCreator
-	public NoteContent(String content) {
-		this.content = content;
+	public NoteContent(String title, String body) {
+		this.title = title;
+		this.body = body;
 	}
 
-	public String getContent() {
-		return content;
+	public String getBody() {
+		return body;
+	}
+
+	public String getTitle() {
+		return title;
 	}
 }
