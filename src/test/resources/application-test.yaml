@@ -1,2 +1,6 @@
 localStorage:
   rootPath: target/test-data/.sharad/data
+
+logging:
+  file:
+    name: target/.sharad/log/tmp.log
