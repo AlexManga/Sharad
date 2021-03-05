@@ -2,6 +2,7 @@ package fr.ama.sharadback;
 
 import static org.assertj.core.util.Files.delete;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,6 +53,12 @@ public class TagControllerIntegrationTest {
 		mockMvc.perform(post("/tag")
 				.contentType(APPLICATION_JSON)
 				.content(tagStr))
+				.andExpect(status().is2xxSuccessful());
+	}
+
+	@Test
+	void success_on_get_tag() throws Exception {
+		mockMvc.perform(get("/tag"))
 				.andExpect(status().is2xxSuccessful());
 	}
 
