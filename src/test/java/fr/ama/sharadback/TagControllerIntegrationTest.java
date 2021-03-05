@@ -1,5 +1,6 @@
 package fr.ama.sharadback;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Files.delete;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -60,6 +61,26 @@ public class TagControllerIntegrationTest {
 	void success_on_get_tag() throws Exception {
 		mockMvc.perform(get("/tag"))
 				.andExpect(status().is2xxSuccessful());
+	}
+
+	@Test
+	void posting_then_getting_should_give_back_the_tag() throws Exception {
+		Tag arbitraryTag = new Tag("arbitrary tag",
+				List.of("linkedElem1", "linkedElem2", "linkedElem3"));
+
+		mockMvc.perform(post("/tag").contentType(APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(arbitraryTag)))
+				.andExpect(status().is2xxSuccessful());
+
+		String getResponseBody = mockMvc.perform(get("/tag"))
+				.andExpect(status().is2xxSuccessful())
+				.andReturn().getResponse().getContentAsString();
+		Tag[] retrievedTags = objectMapper.readerFor(Tag[].class).readValue(getResponseBody);
+
+		assertThat(retrievedTags).hasSize(1);
+		assertThat(retrievedTags[0])
+				.usingRecursiveComparison()
+				.isEqualTo(arbitraryTag);
 	}
 
 }
