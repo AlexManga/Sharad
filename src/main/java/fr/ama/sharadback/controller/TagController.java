@@ -3,6 +3,7 @@ package fr.ama.sharadback.controller;
 import static org.springframework.http.ResponseEntity.ok;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,11 @@ public class TagController {
 	@PostMapping
 	public ResponseEntity<Void> postTag(@RequestBody Tag tag) {
 		return ok().build();
+	}
+
+	@GetMapping
+	public void getTag() {
+
 	}
 
 }
