@@ -38,11 +38,11 @@ public class NoteServiceIntegrationTest {
 
 	@BeforeEach
 	private void before() throws IOException {
-		File rootStorage = new File(localStorageConfiguration.getRootPath());
+		File rootStorage = localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile();
 		if (rootStorage.exists()) {
 			delete(rootStorage);
 		}
-		assertThat(new File(localStorageConfiguration.getRootPath())).doesNotExist();
+		assertThat(localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile()).doesNotExist();
 	}
 
 	@Test
@@ -50,7 +50,8 @@ public class NoteServiceIntegrationTest {
 		NoteContent arbitraryNoteContent = new NoteContent("arbitrary title", "arbitrary note content");
 		NoteId noteId = noteService.createNote(arbitraryNoteContent);
 
-		File expectedFile = new File(localStorageConfiguration.getRootPath(), noteId.getId() + ".txt");
+		File expectedFile = new File(localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile(),
+				noteId.getId() + ".txt");
 		assertThat(expectedFile).exists();
 	}
 

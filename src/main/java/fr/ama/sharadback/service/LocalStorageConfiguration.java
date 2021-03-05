@@ -1,5 +1,8 @@
 package fr.ama.sharadback.service;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -9,12 +12,21 @@ public class LocalStorageConfiguration {
 
 	private String rootPath;
 
-	public String getRootPath() {
-		return rootPath;
-	}
-
 	public void setRootPath(String rootPath) {
 		this.rootPath = rootPath;
+	}
+
+	public Path getRootPath(StorageDomain storageDomain) {
+		return Paths.get(rootPath, toString(storageDomain));
+	}
+
+	private static String toString(StorageDomain storageDomain) {
+		switch (storageDomain) {
+		case SHARAD_NOTES:
+			return "sharad-notes";
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + storageDomain);
+		}
 	}
 
 }

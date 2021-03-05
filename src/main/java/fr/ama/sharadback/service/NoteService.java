@@ -35,6 +35,7 @@ import fr.ama.sharadback.utils.Result;
 public class NoteService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NoteService.class);
+	public static final StorageDomain STORAGE_DOMAIN = StorageDomain.SHARAD_NOTES;
 
 	private LocalStorageConfiguration localStorageConfiguration;
 	private ObjectMapper objectMapper;
@@ -46,7 +47,7 @@ public class NoteService {
 	}
 
 	public NoteId createNote(NoteContent noteContent) {
-		File storageDir = new File(localStorageConfiguration.getRootPath());
+		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
 			storageDir.mkdirs();
 		}
@@ -67,7 +68,7 @@ public class NoteService {
 	}
 
 	public List<Note> getAllNotes() {
-		File storageDir = new File(localStorageConfiguration.getRootPath());
+		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
 			return List.of();
 		}
@@ -81,7 +82,7 @@ public class NoteService {
 
 	public Optional<StorageError> deleteNote(String noteId) {
 		String fileName = buildNoteFilename(noteId);
-		File fileToDelete = new File(localStorageConfiguration.getRootPath(), fileName);
+		File fileToDelete = new File(localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile(), fileName);
 		if (!fileToDelete.exists()) {
 			return Optional.of(StorageError.fileDoesNotExist(noteId));
 		}
@@ -96,13 +97,14 @@ public class NoteService {
 	}
 
 	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, NoteContent newContent) {
-		File storageDir = new File(localStorageConfiguration.getRootPath());
+		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
 			storageDir.mkdirs();
 		}
 
 		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
-			return error(StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath()));
+			return error(
+					StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toString()));
 		}
 
 		String noteFileName = buildNoteFilename(previousNoteId.getId());

@@ -28,6 +28,7 @@ import fr.ama.sharadback.model.note.NoteContent;
 import fr.ama.sharadback.model.note.NoteId;
 import fr.ama.sharadback.model.note.UpdateNote;
 import fr.ama.sharadback.service.LocalStorageConfiguration;
+import fr.ama.sharadback.service.NoteService;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -48,7 +49,7 @@ class NoteControllerIntegrationTest {
 
 	@BeforeEach
 	void before() {
-		File file = new File(localStorageConfiguration.getRootPath());
+		File file = localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile();
 		if (file.exists()) {
 			delete(file);
 		}
