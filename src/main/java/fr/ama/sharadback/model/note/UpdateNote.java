@@ -1,16 +1,18 @@
 package fr.ama.sharadback.model.note;
 
+import fr.ama.sharadback.model.storage.StorageId;
+
 public class UpdateNote {
 
-	private NoteId previousNoteId;
+	private StorageId previousNoteId;
 	private NoteContent newContent;
 
-	public UpdateNote(NoteId previousNoteId, NoteContent newContent) {
+	public UpdateNote(StorageId previousNoteId, NoteContent newContent) {
 		this.previousNoteId = previousNoteId;
 		this.newContent = newContent;
 	}
 
-	public NoteId getPreviousNoteId() {
+	public StorageId getPreviousNoteId() {
 		return previousNoteId;
 	}
 

@@ -2,17 +2,19 @@ package fr.ama.sharadback.model.note;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import fr.ama.sharadback.model.storage.StorageId;
+
 public class Note {
-	private NoteId noteId;
+	private StorageId noteId;
 	private NoteContent content;
 
 	@JsonCreator
-	public Note(NoteId id, NoteContent content) {
+	public Note(StorageId id, NoteContent content) {
 		this.noteId = id;
 		this.content = content;
 	}
 
-	public NoteId getNoteId() {
+	public StorageId getNoteId() {
 		return noteId;
 	}
 

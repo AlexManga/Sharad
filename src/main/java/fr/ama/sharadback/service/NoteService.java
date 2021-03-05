@@ -1,6 +1,8 @@
 package fr.ama.sharadback.service;
 
 import static fr.ama.sharadback.service.StorageError.genericFatalError;
+import static fr.ama.sharadback.utils.DirectoryUtils.createDirOrCheckAccess;
+import static fr.ama.sharadback.utils.DirectoryUtils.generateUUID;
 import static fr.ama.sharadback.utils.Result.error;
 import static fr.ama.sharadback.utils.Result.success;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -16,7 +18,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.ama.sharadback.controller.FatalException;
 import fr.ama.sharadback.model.note.Note;
 import fr.ama.sharadback.model.note.NoteContent;
-import fr.ama.sharadback.model.note.NoteId;
+import fr.ama.sharadback.model.storage.StorageId;
 import fr.ama.sharadback.utils.Result;
 
 @Service
@@ -46,29 +47,23 @@ public class NoteService {
 		this.localStorageConfiguration = localStorageConfiguration;
 	}
 
-	public NoteId createNote(NoteContent noteContent) {
-		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
-		if (!storageDir.exists()) {
-			storageDir.mkdirs();
-		}
+	public StorageId createNote(NoteContent noteContent) {
+		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
+		createDirOrCheckAccess(storageDir);
 
-		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
-			throw new FatalException(String.format("unable to access storageDir %s", storageDir.getAbsolutePath()));
-		}
-
-		String noteId = generateNoteId();
+		String noteId = generateUUID();
 		try (FileOutputStream fos = new FileOutputStream(new File(storageDir, buildNoteFilename(noteId)))) {
 			String noteVersion = computeVersion(noteContent);
 			fos.write(objectMapper
-					.writeValueAsBytes(new Note(new NoteId(noteId, noteVersion), noteContent)));
-			return new NoteId(noteId, noteVersion);
+					.writeValueAsBytes(new Note(new StorageId(noteId, noteVersion), noteContent)));
+			return new StorageId(noteId, noteVersion);
 		} catch (Exception e) {
 			throw new FatalException("Unknown error happened", e);
 		}
 	}
 
 	public List<Note> getAllNotes() {
-		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
+		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
 			return List.of();
 		}
@@ -82,7 +77,7 @@ public class NoteService {
 
 	public Optional<StorageError> deleteNote(String noteId) {
 		String fileName = buildNoteFilename(noteId);
-		File fileToDelete = new File(localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile(), fileName);
+		File fileToDelete = new File(localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile(), fileName);
 		if (!fileToDelete.exists()) {
 			return Optional.of(StorageError.fileDoesNotExist(noteId));
 		}
@@ -96,15 +91,15 @@ public class NoteService {
 
 	}
 
-	public Result<StorageError, NoteId> modifyNote(NoteId previousNoteId, NoteContent newContent) {
-		File storageDir = localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toFile();
+	public Result<StorageError, StorageId> modifyNote(StorageId previousNoteId, NoteContent newContent) {
+		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
 			storageDir.mkdirs();
 		}
 
 		if (!storageDir.isDirectory() || !storageDir.canRead() || !storageDir.canWrite()) {
 			return error(
-					StorageError.fileDoesNotExist(localStorageConfiguration.getRootPath(STORAGE_DOMAIN).toString()));
+					StorageError.fileDoesNotExist(localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toString()));
 		}
 
 		String noteFileName = buildNoteFilename(previousNoteId.getId());
@@ -117,8 +112,8 @@ public class NoteService {
 				new File(storageDir, noteFileName))) {
 			String noteVersion = computeVersion(newContent);
 			fos.write(objectMapper
-					.writeValueAsBytes(new Note(new NoteId(previousNoteId.getId(), noteVersion), newContent)));
-			return success(new NoteId(previousNoteId.getId(), noteVersion));
+					.writeValueAsBytes(new Note(new StorageId(previousNoteId.getId(), noteVersion), newContent)));
+			return success(new StorageId(previousNoteId.getId(), noteVersion));
 		} catch (Exception e) {
 			return error(genericFatalError(e));
 		}
@@ -140,9 +135,5 @@ public class NoteService {
 
 	private String buildNoteFilename(String fileId) {
 		return fileId + ".txt";
-	}
-
-	private String generateNoteId() {
-		return UUID.randomUUID().toString();
 	}
 }

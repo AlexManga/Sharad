@@ -1,14 +1,14 @@
-package fr.ama.sharadback.model.note;
+package fr.ama.sharadback.model.storage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public class NoteId {
+public class StorageId {
 
 	private String id;
 	private String version;
 
 	@JsonCreator
-	public NoteId(String id, String version) {
+	public StorageId(String id, String version) {
 		this.id = id;
 		this.version = version;
 	}

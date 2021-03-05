@@ -1,28 +1,26 @@
 package fr.ama.sharadback.model.tag;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
+
+import fr.ama.sharadback.model.storage.StorageId;
 
 public class Tag {
 
-	private String tag;
-	private List<String> taggedElementsIds = List.of();
+	private StorageId tagId;
+	private TagContent content;
 
 	@JsonCreator
-	public Tag(String tag, List<String> taggedElementsIds) {
-		this.tag = tag.strip();
-		if (taggedElementsIds != null) {
-			this.taggedElementsIds = taggedElementsIds;
-		}
+	public Tag(StorageId tagId, TagContent content) {
+		this.tagId = tagId;
+		this.content = content;
 	}
 
-	public String getTag() {
-		return tag;
+	public StorageId getTagId() {
+		return tagId;
 	}
 
-	public List<String> getTaggedElementsIds() {
-		return taggedElementsIds;
+	public TagContent getContent() {
+		return content;
 	}
 
 }

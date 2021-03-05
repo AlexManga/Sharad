@@ -8,5 +8,5 @@ package fr.ama.sharadback.service;
  *
  */
 public enum StorageDomain {
-	SHARAD_NOTES;
+	SHARAD_NOTES, SHARAD_TAGS;
 }

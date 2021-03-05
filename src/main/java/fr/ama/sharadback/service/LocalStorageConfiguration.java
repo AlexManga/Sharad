@@ -16,7 +16,7 @@ public class LocalStorageConfiguration {
 		this.rootPath = rootPath;
 	}
 
-	public Path getRootPath(StorageDomain storageDomain) {
+	public Path getPathFor(StorageDomain storageDomain) {
 		return Paths.get(rootPath, toString(storageDomain));
 	}
 
@@ -24,6 +24,8 @@ public class LocalStorageConfiguration {
 		switch (storageDomain) {
 		case SHARAD_NOTES:
 			return "sharad-notes";
+		case SHARAD_TAGS:
+			return "sharad-tags";
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + storageDomain);
 		}

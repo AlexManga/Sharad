@@ -19,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import fr.ama.sharadback.SharadBackApplication;
 import fr.ama.sharadback.model.note.Note;
 import fr.ama.sharadback.model.note.NoteContent;
-import fr.ama.sharadback.model.note.NoteId;
+import fr.ama.sharadback.model.storage.StorageId;
 import fr.ama.sharadback.utils.StreamUtils;
 
 @SpringBootTest(classes = { SharadBackApplication.class })
@@ -38,19 +38,19 @@ public class NoteServiceIntegrationTest {
 
 	@BeforeEach
 	private void before() throws IOException {
-		File rootStorage = localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile();
+		File rootStorage = localStorageConfiguration.getPathFor(NoteService.STORAGE_DOMAIN).toFile();
 		if (rootStorage.exists()) {
 			delete(rootStorage);
 		}
-		assertThat(localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile()).doesNotExist();
+		assertThat(localStorageConfiguration.getPathFor(NoteService.STORAGE_DOMAIN).toFile()).doesNotExist();
 	}
 
 	@Test
 	void creating_a_note_should_create_a_file() throws Exception {
 		NoteContent arbitraryNoteContent = new NoteContent("arbitrary title", "arbitrary note content");
-		NoteId noteId = noteService.createNote(arbitraryNoteContent);
+		StorageId noteId = noteService.createNote(arbitraryNoteContent);
 
-		File expectedFile = new File(localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile(),
+		File expectedFile = new File(localStorageConfiguration.getPathFor(NoteService.STORAGE_DOMAIN).toFile(),
 				noteId.getId() + ".txt");
 		assertThat(expectedFile).exists();
 	}
@@ -72,7 +72,7 @@ public class NoteServiceIntegrationTest {
 		List<NoteContent> arbitraryContents = StreamUtils.zip(titles, contents)
 				.map(titleAndContent -> new NoteContent(titleAndContent.getFirst(), titleAndContent.getSecond()))
 				.collect(toList());
-		List<NoteId> createdNotes = arbitraryContents
+		List<StorageId> createdNotes = arbitraryContents
 				.stream()
 				.map(noteService::createNote)
 				.collect(toList());

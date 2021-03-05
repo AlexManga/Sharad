@@ -25,8 +25,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ama.sharadback.model.note.Note;
 import fr.ama.sharadback.model.note.NoteContent;
-import fr.ama.sharadback.model.note.NoteId;
 import fr.ama.sharadback.model.note.UpdateNote;
+import fr.ama.sharadback.model.storage.StorageId;
 import fr.ama.sharadback.service.LocalStorageConfiguration;
 import fr.ama.sharadback.service.NoteService;
 
@@ -49,7 +49,7 @@ class NoteControllerIntegrationTest {
 
 	@BeforeEach
 	void before() {
-		File file = localStorageConfiguration.getRootPath(NoteService.STORAGE_DOMAIN).toFile();
+		File file = localStorageConfiguration.getPathFor(NoteService.STORAGE_DOMAIN).toFile();
 		if (file.exists()) {
 			delete(file);
 		}
@@ -78,7 +78,7 @@ class NoteControllerIntegrationTest {
 				.andExpect(status().is2xxSuccessful())
 				.andReturn()
 				.getResponse().getContentAsString();
-		NoteId noteId = objectMapper.readValue(postResponseBody, NoteId.class);
+		StorageId noteId = objectMapper.readValue(postResponseBody, StorageId.class);
 
 		String getResponseBody = mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())
@@ -106,7 +106,7 @@ class NoteControllerIntegrationTest {
 				.andReturn()
 				.getResponse().getContentAsString();
 
-		NoteId noteId = objectMapper.readValue(postResponseBody, NoteId.class);
+		StorageId noteId = objectMapper.readValue(postResponseBody, StorageId.class);
 
 		String getResponseBody = mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())
@@ -132,7 +132,7 @@ class NoteControllerIntegrationTest {
 
 		mockMvc.perform(put("/note").contentType(APPLICATION_JSON)
 				.content(objectMapper
-						.writeValueAsString(new UpdateNote(new NoteId("arbitraryNoteId", ""), arbitraryNoteContent))))
+						.writeValueAsString(new UpdateNote(new StorageId("arbitraryNoteId", ""), arbitraryNoteContent))))
 				.andExpect(status().isNotFound());
 	}
 
@@ -149,7 +149,7 @@ class NoteControllerIntegrationTest {
 				.andReturn()
 				.getResponse().getContentAsString();
 
-		NoteId initialNoteId = objectMapper.readValue(postResponseBody, NoteId.class);
+		StorageId initialNoteId = objectMapper.readValue(postResponseBody, StorageId.class);
 
 		String getResponseBeforeModificationBody = mockMvc.perform(get("/note"))
 				.andExpect(status().is2xxSuccessful())

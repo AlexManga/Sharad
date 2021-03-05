@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.ama.sharadback.model.note.Note;
 import fr.ama.sharadback.model.note.NoteContent;
-import fr.ama.sharadback.model.note.NoteId;
 import fr.ama.sharadback.model.note.UpdateNote;
+import fr.ama.sharadback.model.storage.StorageId;
 import fr.ama.sharadback.service.NoteService;
 import fr.ama.sharadback.service.StorageError;
 
@@ -34,7 +34,7 @@ public class NoteController {
 	private NoteService noteService;
 
 	@PostMapping
-	public @ResponseBody NoteId postNote(@RequestBody NoteContent noteContent) {
+	public @ResponseBody StorageId postNote(@RequestBody NoteContent noteContent) {
 		return noteService.createNote(noteContent);
 	}
 
@@ -51,7 +51,7 @@ public class NoteController {
 	}
 
 	@PutMapping
-	public ResponseEntity<NoteId> putNote(@RequestBody UpdateNote updateNote) {
+	public ResponseEntity<StorageId> putNote(@RequestBody UpdateNote updateNote) {
 		return noteService.modifyNote(updateNote.getPreviousNoteId(), updateNote.getNewContent())
 				.map(noteId -> ok().body(noteId))
 				.onError(NoteController::handleStorageError);
