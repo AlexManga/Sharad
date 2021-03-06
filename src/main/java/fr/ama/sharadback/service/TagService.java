@@ -1,7 +1,15 @@
 package fr.ama.sharadback.service;
 
+import static fr.ama.sharadback.service.StorageError.fileDoesNotExist;
+import static fr.ama.sharadback.service.StorageError.genericFatalError;
+import static fr.ama.sharadback.service.TagService.TagError.fromStorageError;
+import static fr.ama.sharadback.service.TagService.TagErrorType.STORAGE_ERROR;
 import static fr.ama.sharadback.utils.DirectoryUtils.createDirOrCheckAccess;
 import static fr.ama.sharadback.utils.DirectoryUtils.generateUUID;
+import static fr.ama.sharadback.utils.Result.error;
+import static fr.ama.sharadback.utils.Result.success;
+import static fr.ama.sharadback.utils.ResultWithWarnings.partialResultWithWarnings;
+import static fr.ama.sharadback.utils.ResultWithWarnings.successWithoutWarnings;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -10,8 +18,12 @@ import static org.apache.commons.collections4.SetUtils.intersection;
 import static org.apache.commons.collections4.SetUtils.unmodifiableSet;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -32,11 +44,15 @@ import fr.ama.sharadback.model.storage.StorageId;
 import fr.ama.sharadback.model.tag.Tag;
 import fr.ama.sharadback.model.tag.TagContent;
 import fr.ama.sharadback.utils.Result;
+import fr.ama.sharadback.utils.ResultWithWarnings;
+import fr.ama.sharadback.utils.ResultWithWarnings.PartialResultWithWarnings;
 
 @Service
 public class TagService {
+	private static final String NO_ELEMENT_FOUND_MESSAGE = "No element found tagged with this tag";
 	private static final Logger LOGGER = LoggerFactory.getLogger(TagService.class);
 	public static final StorageDomain STORAGE_DOMAIN = StorageDomain.SHARAD_TAGS;
+	private static final String NOT_ALL_DELETED_SOME_UNTAGGED_MESSAGE = "Not all specified tagged elements were removed because they were found not to be tagged";
 
 	private ObjectMapper objectMapper;
 	private LocalStorageConfiguration localStorageConfiguration;
@@ -75,8 +91,8 @@ public class TagService {
 
 		return stream(storageDir.listFiles(file -> file.isFile()))
 				.map(this::retrieveTagFromFile)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
+				.filter(Result::isSuccess)
+				.map(Result::getSuccess)
 				.collect(toList());
 	}
 
@@ -111,47 +127,140 @@ public class TagService {
 		return result;
 	}
 
-	private Optional<Tag> retrieveTagFromFile(File file) {
+	private Result<TagError, Tag> retrieveTagFromFile(File file) {
 		try {
 			Tag tag = objectMapper.readValue(file, Tag.class);
-			return Optional.of(tag);
+			return success(tag);
+		} catch (FileNotFoundException fnf) {
+			LOGGER.warn(String.format("file not found: %s", file.getAbsolutePath()), fnf);
+			return error(fromStorageError(fileDoesNotExist(file.getName())));
 		} catch (IOException e) {
 			LOGGER.warn(String.format("unable to read file %s", file.getAbsolutePath()), e);
-			return Optional.empty();
+			return Result.error(fromStorageError(genericFatalError(e)));
 		}
 	}
 
-	public Result<StorageError, StorageId> deleteTags(String tagId, List<String> taggedElements) {
-		Optional<Tag> readTag = readTag(tagId);
+	public ResultWithWarnings<TagError, TagWarning, Optional<StorageId>> deleteTags(String tagId,
+			List<String> taggedElements) {
+		// StorageErrors should come from here
+		Result<TagError, Tag> readTag = readTag(tagId);
 
 		return readTag
 				.map(previousTag -> doDeleteTags(taggedElements, previousTag))
-				.map(id -> Result.<StorageError, StorageId>success(id))
-				.orElse(Result.error(StorageError.fileDoesNotExist(tagId)));
+				.onError(ResultWithWarnings::errorWithoutWarnings);
 	}
 
-	private StorageId doDeleteTags(List<String> taggedElements, Tag previousTag) {
+	private ResultWithWarnings<TagError, TagWarning, Optional<StorageId>> doDeleteTags(List<String> taggedElements,
+			Tag previousTag) {
 		String[] stringArray = new String[] {};
 		Set<String> taggedElementsIds = unmodifiableSet(taggedElements.toArray(stringArray));
 		Set<String> previousTaggedElementsIds = unmodifiableSet(
 				previousTag.getContent().getTaggedElementsIds().toArray(stringArray));
 
 		SetView<String> intersection = intersection(taggedElementsIds, previousTaggedElementsIds);
+		PartialResultWithWarnings<TagWarning> partialResult = partialResultWithWarnings();
 		if (!intersection.equals(taggedElementsIds)) {
 			if (intersection.isEmpty()) {
-				// return error
+				return ResultWithWarnings.errorWithoutWarnings(
+						new TagError(TagErrorType.DELETE_NO_ELEMENT_TAGGED, NO_ELEMENT_FOUND_MESSAGE));
 			}
-			// add warning
+			partialResult = ResultWithWarnings.partialResultWithWarnings(new TagWarning(
+					TagWarningType.NOT_ALL_DELETED_SOME_UNTAGGED, NOT_ALL_DELETED_SOME_UNTAGGED_MESSAGE));
 		}
 
-		TagContent newTagContent = new TagContent(previousTag.getContent().getTag(),
-				new ArrayList<>(difference(previousTaggedElementsIds, taggedElementsIds)));
-		return writeTagOnDisk(newTagContent, previousTag.getTagId().getId());
+		SetView<String> newTaggedElements = difference(previousTaggedElementsIds, taggedElementsIds);
+
+		if (newTaggedElements.isEmpty()) {
+			deleteOnDisk(previousTag.getTagId().getId());
+			return successWithoutWarnings(Optional.empty());
+		} else {
+
+			TagContent newTagContent = new TagContent(previousTag.getContent().getTag(),
+					new ArrayList<>(newTaggedElements));
+
+			StorageId storageId = writeTagOnDisk(newTagContent, previousTag.getTagId().getId());
+
+			return partialResult.success(Optional.of(storageId));
+		}
 	}
 
-	private Optional<Tag> readTag(String tagId) {
+	private Optional<TagError> deleteOnDisk(String id) {
+		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
+		if (!storageDir.exists()) {
+			return Optional.of(fromStorageError(fileDoesNotExist(buildTagFilename(id))));
+		}
+		try {
+			Files.delete(Paths.get(storageDir.getAbsolutePath(), buildTagFilename(id)));
+			return Optional.empty();
+		} catch (NoSuchFileException e) {
+			return Optional.of(fromStorageError(fileDoesNotExist(buildTagFilename(id))));
+		} catch (IOException e) {
+			return Optional.of(fromStorageError(genericFatalError(e)));
+		}
+	}
+
+	private Result<TagError, Tag> readTag(String tagId) {
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		File tagFile = new File(storageDir, buildTagFilename(tagId));
 		return retrieveTagFromFile(tagFile);
+	}
+
+	public static class TagError {
+		private TagErrorType type;
+		private String message;
+
+		private TagError(TagErrorType type, String representation) {
+			this.type = type;
+			this.message = representation;
+		}
+
+		public static TagError fromStorageError(StorageError error) {
+			String message = switch (error.getType()) {
+			case FATAL: {
+				yield "An unknown fatal error happened";
+			}
+			case FILE_DOES_NOT_EXIST: {
+				yield "File does not exist";
+			}
+			default:
+				throw new IllegalArgumentException("Unexpected value: " + error.getType());
+			};
+
+			return new TagError(STORAGE_ERROR, message);
+		}
+
+		public TagErrorType getType() {
+			return type;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+	}
+
+	public enum TagErrorType {
+		DELETE_NO_ELEMENT_TAGGED, STORAGE_ERROR;
+	}
+
+	public static class TagWarning {
+		private TagWarningType type;
+		private String message;
+
+		private TagWarning(TagWarningType type, String message) {
+			this.type = type;
+			this.message = message;
+		}
+
+		public TagWarningType getType() {
+			return type;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+	}
+
+	public enum TagWarningType {
+		NOT_ALL_DELETED_SOME_UNTAGGED;
 	}
 }

@@ -21,6 +21,13 @@ public interface Result<E, S> {
 		return Result.<E, T>error(getError());
 	}
 
+	default <T> Result<E, T> bind(Function<S, Result<E, T>> binding) {
+		if (isSuccess()) {
+			return binding.apply(getSuccess());
+		}
+		return Result.<E, T>error(getError());
+	}
+
 	default S onError(Function<E, S> errorToSuccessMapper) {
 		if (isSuccess())
 			return getSuccess();
