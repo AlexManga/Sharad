@@ -2,6 +2,7 @@ package fr.ama.sharadback.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +33,11 @@ public class TagController {
 	@GetMapping
 	public @ResponseBody List<Tag> getTag() {
 		return tagService.getAllTags();
+	}
+
+	@DeleteMapping("/{id}/{taggedElements}")
+	public @ResponseBody StorageId deleteTag(String tagId, List<String> taggedElements) {
+		return tagService.deleteTags(tagId, taggedElements);
 	}
 
 }
