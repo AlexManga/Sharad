@@ -7,7 +7,6 @@ import static org.springframework.http.ResponseEntity.status;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +29,17 @@ import fr.ama.sharadback.service.StorageError;
 @RequestMapping("/note")
 public class NoteController {
 
-	@Autowired
 	private NoteService noteService;
 
+	public NoteController(NoteService noteService) {
+		this.noteService = noteService;
+	}
+
 	@PostMapping
-	public @ResponseBody StorageId postNote(@RequestBody NoteContent noteContent) {
-		return noteService.createNote(noteContent);
+	public @ResponseBody ResponseEntity<StorageId> postNote(@RequestBody NoteContent noteContent) {
+		return noteService.createNote(noteContent)
+				.map(ResponseEntity::ok)
+				.onError(NoteController::handleStorageError);
 	}
 
 	@GetMapping

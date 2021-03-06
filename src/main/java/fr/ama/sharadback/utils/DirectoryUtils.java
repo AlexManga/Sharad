@@ -3,18 +3,22 @@ package fr.ama.sharadback.utils;
 import java.io.File;
 import java.util.UUID;
 
-import fr.ama.sharadback.controller.FatalException;
-
 public class DirectoryUtils {
 
-	public static void createDirOrCheckAccess(File dirToCreateOrCheck) {
+	public static boolean createDirOrCheckAccess(File dirToCreateOrCheck) {
 		if (!dirToCreateOrCheck.exists()) {
 			dirToCreateOrCheck.mkdirs();
-		} else if (!dirToCreateOrCheck.isDirectory() || !dirToCreateOrCheck.canRead()
+			return true;
+		} else
+			return checkStorageDirectory(dirToCreateOrCheck);
+	}
+
+	private static boolean checkStorageDirectory(File dirToCreateOrCheck) {
+		if (!dirToCreateOrCheck.isDirectory() || !dirToCreateOrCheck.canRead()
 				|| !dirToCreateOrCheck.canWrite()) {
-			throw new FatalException(
-					String.format("unable to access storageDir %s", dirToCreateOrCheck.getAbsolutePath()));
+			return false;
 		}
+		return true;
 	}
 
 	public static String generateUUID() {

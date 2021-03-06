@@ -74,7 +74,7 @@ public class ResultWithWarnings<E, W, S> implements Result<E, S> {
 	}
 
 	public static class PartialResultWithWarnings<W> {
-		private List<W> warnings;
+		private List<W> warnings = List.of();
 
 		private PartialResultWithWarnings(List<W> warnings) {
 			this.warnings = warnings;
@@ -86,6 +86,10 @@ public class ResultWithWarnings<E, W, S> implements Result<E, S> {
 
 		public <E, S> ResultWithWarnings<E, W, S> error(E error) {
 			return new ResultWithWarnings<E, W, S>(Result.error(error), this.warnings);
+		}
+
+		public <E, S> ResultWithWarnings<E, W, S> fromResult(Result<E, S> result) {
+			return new ResultWithWarnings<>(result, this.warnings);
 		}
 	}
 

@@ -34,8 +34,10 @@ public class TagController {
 	}
 
 	@PostMapping
-	public @ResponseBody StorageId postTag(@RequestBody TagContent tagContent) {
-		return tagService.createTag(tagContent);
+	public ResponseEntity<StorageId> postTag(@RequestBody TagContent tagContent) {
+		return tagService.createTag(tagContent)
+				.map(ResponseEntity::ok)
+				.onError(TagController::handleDeleteError);
 	}
 
 	@GetMapping
@@ -44,7 +46,7 @@ public class TagController {
 	}
 
 	@DeleteMapping("/{id}/{taggedElements}")
-	public @ResponseBody ResponseEntity<StorageId> deleteTag(
+	public ResponseEntity<StorageId> deleteTag(
 			@PathVariable("id") String tagId,
 			@PathVariable("taggedElements") List<String> taggedElements) {
 

@@ -35,6 +35,13 @@ public interface Result<E, S> {
 		return errorToSuccessMapper.apply(getError());
 	}
 
+	default <F> Result<F, S> mapError(Function<E, F> mapper) {
+		if (this.isError()) {
+			return new Error<F, S>(mapper.apply(getError()));
+		}
+		return new Success<F, S>(this.getSuccess());
+	}
+
 	public static <E, S> Result<E, S> success(S success) {
 		return new Success<E, S>(success);
 	}

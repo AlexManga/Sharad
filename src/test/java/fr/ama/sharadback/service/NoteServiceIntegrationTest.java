@@ -20,6 +20,7 @@ import fr.ama.sharadback.SharadBackApplication;
 import fr.ama.sharadback.model.note.Note;
 import fr.ama.sharadback.model.note.NoteContent;
 import fr.ama.sharadback.model.storage.StorageId;
+import fr.ama.sharadback.utils.Result;
 import fr.ama.sharadback.utils.StreamUtils;
 
 @SpringBootTest(classes = { SharadBackApplication.class })
@@ -46,9 +47,9 @@ public class NoteServiceIntegrationTest {
 	}
 
 	@Test
-	void creating_a_note_should_create_a_file() throws Exception {
+	void creating_a_note_should_create_a_file() {
 		NoteContent arbitraryNoteContent = new NoteContent("arbitrary title", "arbitrary note content");
-		StorageId noteId = noteService.createNote(arbitraryNoteContent);
+		StorageId noteId = noteService.createNote(arbitraryNoteContent).getSuccess();
 
 		File expectedFile = new File(localStorageConfiguration.getPathFor(NoteService.STORAGE_DOMAIN).toFile(),
 				noteId.getId() + ".txt");
@@ -75,6 +76,7 @@ public class NoteServiceIntegrationTest {
 		List<StorageId> createdNotes = arbitraryContents
 				.stream()
 				.map(noteService::createNote)
+				.map(Result::getSuccess)
 				.collect(toList());
 
 		List<Note> retrievedNotes = noteService.getAllNotes();

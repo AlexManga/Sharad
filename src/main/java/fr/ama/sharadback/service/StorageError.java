@@ -13,7 +13,7 @@ public class StorageError {
 	}
 
 	public static enum Type {
-		FILE_DOES_NOT_EXIST, FATAL;
+		FILE_DOES_NOT_EXIST, FATAL, STORAGE_SERVICE_UNAVAILABLE;
 	}
 
 	public static FileDoesNotExistError fileDoesNotExist(String fileName) {
@@ -22,6 +22,10 @@ public class StorageError {
 
 	public static FatalError genericFatalError(Exception exception) {
 		return new FatalError(exception);
+	}
+
+	public static StorageServiceUnavailable storageServiceUnavailable() {
+		return new StorageServiceUnavailable();
 	}
 
 	public static class FileDoesNotExistError extends StorageError {
@@ -51,6 +55,12 @@ public class StorageError {
 			return exception;
 		}
 
+	}
+
+	public static class StorageServiceUnavailable extends StorageError {
+		private StorageServiceUnavailable() {
+			super(Type.STORAGE_SERVICE_UNAVAILABLE);
+		}
 	}
 
 }
