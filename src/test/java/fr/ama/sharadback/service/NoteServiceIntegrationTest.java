@@ -65,6 +65,7 @@ public class NoteServiceIntegrationTest {
 
 	@Test
 	void getting_notes_after_creating_some_should_give_them_back() throws Exception {
+		// TODO : Stream.of
 		Stream<String> titles = asList(new String[] { "title 1", "title 2", "title 3" })
 				.stream();
 		Stream<String> contents = asList(new String[] { "content 1", "content 2", "content 3" })

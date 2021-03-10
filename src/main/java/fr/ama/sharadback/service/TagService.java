@@ -115,6 +115,7 @@ public class TagService {
 	private Result<TagError, Optional<StorageId>> deleteElementsOrWholeTag(Tag previousTag,
 			Set<String> newTaggedElements) {
 
+		// TODO : Ne pas supprimer du disque
 		boolean noMoreTaggedElements = newTaggedElements.isEmpty();
 		if (noMoreTaggedElements) {
 			deleteOnDisk(previousTag.getTagId().getId());
