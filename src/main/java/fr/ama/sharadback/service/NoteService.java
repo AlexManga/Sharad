@@ -47,7 +47,7 @@ public class NoteService {
 		this.localStorageConfiguration = localStorageConfiguration;
 	}
 
-	public Result<StorageError, StorageId> createNote(NoteContent noteContent) {
+	public Result<StorageError, Void, StorageId> createNote(NoteContent noteContent) {
 		String noteId = generateUUID();
 		return writeNoteOnDisk(noteId, noteContent);
 	}
@@ -81,7 +81,7 @@ public class NoteService {
 
 	}
 
-	public Result<StorageError, StorageId> modifyNote(StorageId previousNoteId, NoteContent newContent) {
+	public Result<StorageError, Void, StorageId> modifyNote(StorageId previousNoteId, NoteContent newContent) {
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 
 		File noteFileToModify = new File(storageDir, buildNoteFilename(previousNoteId.getId()));
@@ -92,7 +92,7 @@ public class NoteService {
 		return writeNoteOnDisk(previousNoteId.getId(), newContent);
 	}
 
-	private Result<StorageError, StorageId> writeNoteOnDisk(String id, NoteContent newContent) {
+	private Result<StorageError, Void, StorageId> writeNoteOnDisk(String id, NoteContent newContent) {
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		if (!createDirOrCheckAccess(storageDir)) {
 			return error(StorageError.storageServiceUnavailable());
@@ -113,7 +113,7 @@ public class NoteService {
 				});
 	}
 
-	private Result<StorageError, Note> retrieveNoteFromFile(File file) {
+	private Result<StorageError, Void, Note> retrieveNoteFromFile(File file) {
 		try {
 			Note note = objectMapper.readValue(file, Note.class);
 			return success(note);
@@ -126,7 +126,7 @@ public class NoteService {
 		}
 	}
 
-	private Result<FatalError, String> computeVersion(NoteContent content) {
+	private Result<FatalError, Void, String> computeVersion(NoteContent content) {
 		MessageDigest digestAlgorithm;
 		try {
 			digestAlgorithm = MessageDigest.getInstance("SHA-256");

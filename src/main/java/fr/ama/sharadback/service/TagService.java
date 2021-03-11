@@ -9,9 +9,8 @@ import static fr.ama.sharadback.utils.DirectoryUtils.createDirOrCheckAccess;
 import static fr.ama.sharadback.utils.DirectoryUtils.generateUUID;
 import static fr.ama.sharadback.utils.FatalError.fatalErrorSingleton;
 import static fr.ama.sharadback.utils.Result.error;
+import static fr.ama.sharadback.utils.Result.partialResultWithWarnings;
 import static fr.ama.sharadback.utils.Result.success;
-import static fr.ama.sharadback.utils.ResultWithWarnings.errorWithoutWarnings;
-import static fr.ama.sharadback.utils.ResultWithWarnings.partialResultWithWarnings;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -44,8 +43,6 @@ import fr.ama.sharadback.model.tag.Tag;
 import fr.ama.sharadback.model.tag.TagContent;
 import fr.ama.sharadback.utils.FatalError;
 import fr.ama.sharadback.utils.Result;
-import fr.ama.sharadback.utils.ResultWithWarnings;
-import fr.ama.sharadback.utils.ResultWithWarnings.PartialResultWithWarnings;
 
 @Service
 public class TagService {
@@ -64,7 +61,7 @@ public class TagService {
 		this.localStorageConfiguration = localStorageConfiguration;
 	}
 
-	public Result<TagError, StorageId> createTag(TagContent tagContent) {
+	public Result<TagError, Void, StorageId> createTag(TagContent tagContent) {
 		String tagId = generateUUID();
 		return writeTagOnDisk(tagId, tagContent);
 	}
@@ -82,16 +79,16 @@ public class TagService {
 				.collect(toList());
 	}
 
-	public ResultWithWarnings<TagError, TagWarning, Optional<StorageId>> deleteTags(String tagId,
+	public Result<TagError, TagWarning, Optional<StorageId>> deleteTags(String tagId,
 			List<String> taggedElements) {
 		return readTagId(tagId)
-				.map(previousTag -> deleteTags(previousTag, taggedElements))
-				.onError(ResultWithWarnings::errorWithoutWarnings);
+				.<TagWarning>ingnoreWarnings()
+				.bind(previousTag -> deleteTags(previousTag, taggedElements));
 	}
 
-	private ResultWithWarnings<TagError, TagWarning, Optional<StorageId>> deleteTags(Tag previousTag,
+	private Result<TagError, TagWarning, Optional<StorageId>> deleteTags(Tag previousTag,
 			List<String> elementsToDelete) {
-		PartialResultWithWarnings<TagWarning> partialResult = partialResultWithWarnings();
+		Result.PartialResult<TagWarning> partialResult = partialResultWithWarnings();
 		String[] stringArray = new String[] {};
 
 		Set<String> taggedElementsIdsToDelete = unmodifiableSet(elementsToDelete.toArray(stringArray));
@@ -101,18 +98,18 @@ public class TagService {
 		SetView<String> intersection = intersection(taggedElementsIdsToDelete, previousTaggedElementsIds);
 		boolean nothingToDelete = intersection.isEmpty();
 		if (nothingToDelete) {
-			return errorWithoutWarnings(new TagError(TagErrorType.DELETE_NO_ELEMENT_TAGGED, NO_ELEMENT_FOUND_MESSAGE));
+			return error(new TagError(TagErrorType.DELETE_NO_ELEMENT_TAGGED, NO_ELEMENT_FOUND_MESSAGE));
 		} else if (!intersection.equals(taggedElementsIdsToDelete)) {
 			partialResult = partialResultWithWarnings(
 					new TagWarning(TagWarningType.NOT_ALL_DELETED_SOME_UNTAGGED,
 							NOT_ALL_DELETED_SOME_UNTAGGED_MESSAGE));
 		}
 
-		return partialResult.fromResult(deleteElementsOrWholeTag(previousTag,
+		return partialResult.fromResultWithoutWarnings(deleteElementsOrWholeTag(previousTag,
 				difference(previousTaggedElementsIds, taggedElementsIdsToDelete)));
 	}
 
-	private Result<TagError, Optional<StorageId>> deleteElementsOrWholeTag(Tag previousTag,
+	private Result<TagError, Void, Optional<StorageId>> deleteElementsOrWholeTag(Tag previousTag,
 			Set<String> newTaggedElements) {
 
 		// TODO : Ne pas supprimer du disque
@@ -127,7 +124,7 @@ public class TagService {
 		}
 	}
 
-	private Result<TagError, StorageId> overrideTaggedElementsOnDisk(Tag previousTag,
+	private Result<TagError, Void, StorageId> overrideTaggedElementsOnDisk(Tag previousTag,
 			Set<String> newTaggedElements) {
 
 		TagContent newTagContent = new TagContent(previousTag.getContent().getTag(),
@@ -140,7 +137,7 @@ public class TagService {
 		return tagId + ".txt";
 	}
 
-	private Result<FatalError, String> computeVersion(TagContent tag) {
+	private Result<FatalError, Void, String> computeVersion(TagContent tag) {
 		MessageDigest digestAlgorithm;
 		try {
 			digestAlgorithm = MessageDigest.getInstance("SHA-256");
@@ -155,13 +152,13 @@ public class TagService {
 				.getBytes(UTF_8);
 	}
 
-	private Result<TagError, Tag> readTagId(String tagId) {
+	private Result<TagError, Void, Tag> readTagId(String tagId) {
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		File tagFile = new File(storageDir, buildTagFilename(tagId));
 		return retrieveTagFromFile(tagFile);
 	}
 
-	private Result<TagError, Tag> retrieveTagFromFile(File file) {
+	private Result<TagError, Void, Tag> retrieveTagFromFile(File file) {
 		try {
 			Tag tag = objectMapper.readValue(file, Tag.class);
 			return success(tag);
@@ -174,7 +171,7 @@ public class TagService {
 		}
 	}
 
-	private Result<TagError, StorageId> writeTagOnDisk(String id, TagContent newContent) {
+	private Result<TagError, Void, StorageId> writeTagOnDisk(String id, TagContent newContent) {
 
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		if (!createDirOrCheckAccess(storageDir)) {
