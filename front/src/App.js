@@ -2,11 +2,17 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import React, {Component} from 'react';
 import './App.css';
+import Note from "./components/Note";
+import NoteForm from "./components/NoteForm";
 
 
 class App extends Component {
 
-    state = { inputTextBoxDisplayed: false };
+    state = {
+        inputTextBoxDisplayed: false,
+        notes: [],
+    };
+
     noteInputRef;
 
     constructor() {
@@ -15,39 +21,57 @@ class App extends Component {
     }
 
     displayTextBoxInput = () => {
-        this.setState({ inputTextBoxDisplayed: true });
+        this.setState({inputTextBoxDisplayed: true});
     }
 
-    postNote = () => {
-        const val = this.noteInputRef.current.value;
+    postNote = (title,body) => {
+        const request = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                "title": title,
+                "body": body,
+            })
+        }
+
+        fetch('/note', request)
+            .then(res => res.json())
+            .then((data) => {
+                console.log(data);
+                this.fetchAllNotes();
+            })
+            .catch(console.log)
+    }
+
+    componentDidMount() {
+        this.fetchAllNotes();
+    }
+
+    fetchAllNotes() {
         const request = {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            // body: JSON.stringify({ content: `${val}` })
+            headers: {'Content-Type': 'application/json'}
         }
         fetch('/note', request)
-        .then(res => res.json())
-        .then((data) => {
-            console.log(data);
-        })
-        .catch(console.log)
+            .then(res => res.json())
+            .then((data) => {
+                this.setState({notes: data});
+            })
+            .catch(console.log)
     }
 
     render() {
         return (
             <main className="App">
                 <div className="container">
-                    <div className="px-5">
-                        <button className="btn btn-outline-primary" onClick={ this.displayTextBoxInput } hidden={ this.state.inputTextBoxDisplayed } >+</button>
-                        <div className="form-group mb-0" hidden={ !this.state.inputTextBoxDisplayed }>
-                            <textarea id="note-input" className="form-control" ref={ this.noteInputRef }></textarea>
-                            <div className="row mx-0">
-                                <button className="btn btn-outline-primary offset-10 col-2" onClick={ this.postNote }>
-                                    Save
-                                </button>
-                            </div>
-                        </div>
+                    <div className="row">
+                        {this.state.notes.map((note) => (
+                            <Note key={note.noteId.id}
+                                  note={note}/>
+                        ))}
                     </div>
+                    <hr/>
+                    <NoteForm postNote={this.postNote}/>
                 </div>
             </main>
         );
