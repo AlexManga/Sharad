@@ -9,22 +9,14 @@ import NoteForm from "./components/NoteForm";
 class App extends Component {
 
     state = {
-        inputTextBoxDisplayed: false,
-        notes: [],
+        notes: []
     };
 
-    noteInputRef;
-
-    constructor() {
-        super();
-        this.noteInputRef = React.createRef();
+    componentDidMount() {
+        this.fetchAllNotes();
     }
 
-    displayTextBoxInput = () => {
-        this.setState({inputTextBoxDisplayed: true});
-    }
-
-    postNote = (title,body) => {
+    postNote = (title, body) => {
         const request = {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -43,9 +35,6 @@ class App extends Component {
             .catch(console.log)
     }
 
-    componentDidMount() {
-        this.fetchAllNotes();
-    }
 
     fetchAllNotes() {
         const request = {
