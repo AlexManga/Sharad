@@ -1,55 +1,49 @@
-import React, {Component} from "react";
+import React, { useState } from "react";
 
-class NoteForm extends Component {
+const NoteForm = ({postNote}) => {
 
-    state = {
-        newNoteTitle: "",
-        newNoteContent: ""
-    };
+    const [newNoteTitle, setNewNoteTitle] = useState("");
+    const [newNoteContent, setNewNoteContent] = useState("");
 
-    submitNote = event => {
+    const submitNote = (event) => {
         event.preventDefault();
-        this.props.postNote(this.state.newNoteTitle, this.state.newNoteContent);
-        this.setState({
-            newNoteTitle: "",
-            newNoteContent: ""
-        })
+        postNote(newNoteTitle, newNoteContent);
+        setNewNoteTitle("");
+        setNewNoteContent("");
     }
 
-    onChangeNoteTitle = event => {
-        this.setState({newNoteTitle: event.currentTarget.value})
+    const onChangeNoteTitle = event => {
+        setNewNoteTitle(event.currentTarget.value);
     }
 
-    onChangeNoteContent = event => {
-        this.setState({newNoteContent: event.currentTarget.value})
+    const onChangeNoteContent = event => {
+        setNewNoteContent(event.currentTarget.value);
     }
 
-    render() {
-        return (
-            <div className="row justify-content-center">
-                <form onSubmit={this.submitNote}>
-                    <legend>Création d'une note :</legend>
-                    <div className="mb-3">
-                        <label htmlFor="inputTitle" className="form-label">Titre</label>
-                        <input value={this.state.newNoteTitle}
-                               onChange={this.onChangeNoteTitle}
-                               type="text"
-                               className="form-control"
-                               id="inputTitle"/>
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="inputContent" className="form-label">Contenu</label>
-                        <textarea
-                            value={this.state.newNoteContent}
-                            onChange={this.onChangeNoteContent}
-                            className="form-control"
-                            id="inputContent"/>
-                    </div>
-                    <button type="submit" className="btn btn-primary">Submit
-                    </button>
-                </form>
-            </div>)
-    }
+    return (
+        <div className="row justify-content-center">
+            <form onSubmit={submitNote}>
+                <legend>Création d'une note :</legend>
+                <div className="mb-3">
+                    <label htmlFor="inputTitle" className="form-label">Titre</label>
+                    <input value={newNoteTitle}
+                           onChange={onChangeNoteTitle}
+                           type="text"
+                           className="form-control"
+                           id="inputTitle"/>
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="inputContent" className="form-label">Contenu</label>
+                    <textarea
+                        value={newNoteContent}
+                        onChange={onChangeNoteContent}
+                        className="form-control"
+                        id="inputContent"/>
+                </div>
+                <button type="submit" className="btn btn-primary">Submit
+                </button>
+            </form>
+        </div>);
 
 }
 
