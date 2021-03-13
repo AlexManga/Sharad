@@ -1,5 +1,6 @@
 // /!\ l'ordre d'import est important. Importer bootstrap en dernier fait que bootstrap override tous les autres css
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-icons/font/bootstrap-icons.css'
 import React, {Component} from 'react';
 import './App.css';
 import Note from "./components/Note";
@@ -49,6 +50,17 @@ class App extends Component {
             .catch(console.log)
     }
 
+    deleteNote(id) {
+        const request = {
+            method: 'DELETE'
+        }
+        fetch('/note/' + id, request)
+            .then(() => {
+                this.fetchAllNotes();
+            })
+            .catch(console.log)
+    }
+
     render() {
         return (
             <main className="App">
@@ -56,7 +68,8 @@ class App extends Component {
                     <div className="row">
                         {this.state.notes.map((note) => (
                             <Note key={note.noteId.id}
-                                  note={note}/>
+                                  note={note}
+                                  deleteNote={() => this.deleteNote(note.noteId.id)}/>
                         ))}
                     </div>
                     <hr/>
