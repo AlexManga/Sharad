@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 
-const NoteForm = ({postNote}) => {
+const NoteForm = ({postNote, editedNote, updateNote}) => {
 
-    const [newNoteTitle, setNewNoteTitle] = useState("");
-    const [newNoteContent, setNewNoteContent] = useState("");
+    const [newNoteTitle, setNewNoteTitle] = useState(editedNote?.content?.title || '');
+    const [newNoteContent, setNewNoteContent] = useState(editedNote?.content?.body || '');
 
     const submitNote = (event) => {
         event.preventDefault();
-        postNote(newNoteTitle, newNoteContent);
+        console.log(editedNote)
+        if (Object.keys(editedNote).length !== 0) {
+            updateNote(newNoteTitle, newNoteContent)
+        } else {
+            postNote(newNoteTitle, newNoteContent);
+        }
         setNewNoteTitle("");
         setNewNoteContent("");
     }
@@ -19,6 +24,13 @@ const NoteForm = ({postNote}) => {
     const onChangeNoteContent = event => {
         setNewNoteContent(event.currentTarget.value);
     }
+
+    React.useEffect(() => {
+        if(editedNote){
+            setNewNoteTitle(editedNote.content.title);
+            setNewNoteContent(editedNote.content.body);
+        }
+    }, [editedNote])
 
     return (
         <div className="row justify-content-center">

@@ -10,7 +10,8 @@ import NoteForm from "./components/NoteForm";
 class App extends Component {
 
     state = {
-        notes: []
+        notes: [],
+        editedNote: null
     };
 
     componentDidMount() {
@@ -24,6 +25,34 @@ class App extends Component {
             body: JSON.stringify({
                 "title": title,
                 "body": body,
+            })
+        }
+
+        fetch('/note', request)
+            .then(res => res.json())
+            .then(() => {
+                this.fetchAllNotes();
+            })
+            .catch(console.log)
+    }
+
+    editNote(editedNote) {
+        this.setState({editedNote});
+    }
+
+    updateNote = (title, body) => {
+        const request = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                "newContent": {
+                    "title": title,
+                    "body": body,
+                },
+                "previousNoteId": {
+                    "id": this.state.editedNote.noteId.id,
+                    "version": this.state.editedNote.noteId.version
+                }
             })
         }
 
@@ -69,11 +98,12 @@ class App extends Component {
                         {this.state.notes.map((note) => (
                             <Note key={note.noteId.id}
                                   note={note}
-                                  deleteNote={() => this.deleteNote(note.noteId.id)}/>
+                                  deleteNote={() => this.deleteNote(note.noteId.id)}
+                                  editNote={() => this.editNote(note)}/>
                         ))}
                     </div>
                     <hr/>
-                    <NoteForm postNote={this.postNote}/>
+                    <NoteForm editedNote={this.state.editedNote} updateNote={this.updateNote} postNote={this.postNote}/>
                 </div>
             </main>
         );
