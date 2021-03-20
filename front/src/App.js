@@ -59,6 +59,7 @@ class App extends Component {
         fetch('/note', request)
             .then(res => res.json())
             .then(() => {
+                this.setState({editedNote: null})
                 this.fetchAllNotes();
             })
             .catch(console.log)
