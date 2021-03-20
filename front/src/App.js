@@ -58,8 +58,7 @@ class App extends Component {
 
         fetch('/note', request)
             .then(res => res.json())
-            .then((data) => {
-                console.log(data);
+            .then(() => {
                 this.fetchAllNotes();
             })
             .catch(console.log)
@@ -73,8 +72,8 @@ class App extends Component {
         }
         fetch('/note', request)
             .then(res => res.json())
-            .then((data) => {
-                this.setState({notes: data});
+            .then((notes) => {
+                this.setState({notes});
             })
             .catch(console.log)
     }

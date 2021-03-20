@@ -7,8 +7,7 @@ const NoteForm = ({postNote, editedNote, updateNote}) => {
 
     const submitNote = (event) => {
         event.preventDefault();
-        console.log(editedNote)
-        if (Object.keys(editedNote).length !== 0) {
+        if (editedNote) {
             updateNote(newNoteTitle, newNoteContent)
         } else {
             postNote(newNoteTitle, newNoteContent);
