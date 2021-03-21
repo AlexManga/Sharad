@@ -28,6 +28,9 @@ const NoteForm = ({postNote, editedNote, updateNote}) => {
         if(editedNote){
             setNewNoteTitle(editedNote.content.title);
             setNewNoteContent(editedNote.content.body);
+        } else {
+            setNewNoteTitle('');
+            setNewNoteContent('');
         }
     }, [editedNote])
 

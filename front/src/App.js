@@ -59,7 +59,7 @@ class App extends Component {
         fetch('/note', request)
             .then(res => res.json())
             .then(() => {
-                this.setState({editedNote: null})
+                this.setState({editedNote: null});
                 this.fetchAllNotes();
             })
             .catch(console.log)
@@ -85,6 +85,7 @@ class App extends Component {
         }
         fetch('/note/' + id, request)
             .then(() => {
+                this.setState({editedNote: null});
                 this.fetchAllNotes();
             })
             .catch(console.log)
@@ -94,14 +95,14 @@ class App extends Component {
         return (
             <main className="App">
                 <div className="container">
-                    <div className="row">
+                    <ul className="list-group">
                         {this.state.notes.map((note) => (
                             <Note key={note.noteId.id}
                                   note={note}
                                   deleteNote={() => this.deleteNote(note.noteId.id)}
                                   editNote={() => this.editNote(note)}/>
                         ))}
-                    </div>
+                    </ul>
                     <hr/>
                     <NoteForm editedNote={this.state.editedNote} updateNote={this.updateNote} postNote={this.postNote}/>
                 </div>
