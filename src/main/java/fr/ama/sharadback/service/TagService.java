@@ -164,7 +164,7 @@ public class TagService {
 			return success(tag);
 		} catch (FileNotFoundException fnf) {
 			LOGGER.warn(String.format("file not found: %s", file.getAbsolutePath()), fnf);
-			return error(fromStorageError(fileDoesNotExist(file.getName())));
+			return error(fromStorageError(fileDoesNotExist()));
 		} catch (IOException e) {
 			LOGGER.warn(String.format("unable to read file %s", file.getAbsolutePath()), e);
 			return Result.error(fromStorageError(genericFatalError(e)));
@@ -197,13 +197,13 @@ public class TagService {
 	private Optional<TagError> deleteOnDisk(String id) {
 		File storageDir = localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile();
 		if (!storageDir.exists()) {
-			return Optional.of(fromStorageError(fileDoesNotExist(buildTagFilename(id))));
+			return Optional.of(fromStorageError(fileDoesNotExist()));
 		}
 		try {
 			Files.delete(Paths.get(storageDir.getAbsolutePath(), buildTagFilename(id)));
 			return Optional.empty();
 		} catch (NoSuchFileException e) {
-			return Optional.of(fromStorageError(fileDoesNotExist(buildTagFilename(id))));
+			return Optional.of(fromStorageError(fileDoesNotExist()));
 		} catch (IOException e) {
 			return Optional.of(fromStorageError(genericFatalError(e)));
 		}

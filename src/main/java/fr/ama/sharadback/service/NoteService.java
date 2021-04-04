@@ -69,7 +69,7 @@ public class NoteService {
 		String fileName = buildNoteFilename(noteId);
 		File fileToDelete = new File(localStorageConfiguration.getPathFor(STORAGE_DOMAIN).toFile(), fileName);
 		if (!fileToDelete.exists()) {
-			return Optional.of(StorageError.fileDoesNotExist(noteId));
+			return Optional.of(StorageError.fileDoesNotExist());
 		}
 
 		try {
@@ -86,7 +86,7 @@ public class NoteService {
 
 		File noteFileToModify = new File(storageDir, buildNoteFilename(previousNoteId.getId()));
 		if (!noteFileToModify.exists()) {
-			return error(fileDoesNotExist(noteFileToModify.getPath()));
+			return error(fileDoesNotExist());
 		}
 
 		return writeNoteOnDisk(previousNoteId.getId(), newContent);
@@ -119,7 +119,7 @@ public class NoteService {
 			return success(note);
 		} catch (FileNotFoundException fnf) {
 			LOGGER.warn(String.format("file not found: %s", file.getAbsolutePath()), fnf);
-			return error(fileDoesNotExist(file.getName()));
+			return error(fileDoesNotExist());
 		} catch (IOException e) {
 			LOGGER.warn(String.format("unable to read file %s", file.getAbsolutePath()), e);
 			return error(genericFatalError(e));

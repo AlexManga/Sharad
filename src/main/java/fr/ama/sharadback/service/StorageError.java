@@ -16,8 +16,8 @@ public class StorageError {
 		FILE_DOES_NOT_EXIST, FATAL, STORAGE_SERVICE_UNAVAILABLE;
 	}
 
-	public static FileDoesNotExistError fileDoesNotExist(String fileName) {
-		return new FileDoesNotExistError(fileName);
+	public static FileDoesNotExistError fileDoesNotExist() {
+		return new FileDoesNotExistError();
 	}
 
 	public static FatalError genericFatalError(Exception exception) {
@@ -30,15 +30,8 @@ public class StorageError {
 
 	public static class FileDoesNotExistError extends StorageError {
 
-		private String file;
-
-		private FileDoesNotExistError(String file) {
+		private FileDoesNotExistError() {
 			super(Type.FILE_DOES_NOT_EXIST);
-			this.file = file;
-		}
-
-		public String getFile() {
-			return file;
 		}
 	}
 
